@@ -1,17 +1,17 @@
+import os
 from django.contrib import admin
-from django.urls import path, include
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from mapping import views as mapping_views
+from django.urls import path, re_path, include
+from django.views.generic import TemplateView
+from django.views.static import serve
+from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', mapping_views.map_view, name='map'),  
-    path('spatial/', include('spatial_analysis.urls')), 
+    path('api/', include('cities_api.urls')),
+    path('map/', TemplateView.as_view(template_name='map.html'), name='map'),
+    path('', TemplateView.as_view(template_name='map.html'), name='map_home'),
 
-    # API endpoints
-    path('api/cities/', include('cities_api.urls')),
-
-    # API documentation
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    re_path(r'^static/(?P<path>.*)$', serve, {
+        'document_root': settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT,
+    }),
 ]

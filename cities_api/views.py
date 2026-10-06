@@ -224,3 +224,33 @@ def api_info(request):
             'Statistics'
         ]
     })
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+@api_view(['GET'])
+def cities_geojson(request):
+    """Export cities as GeoJSON"""
+    from cities_api.models import City
+    cities = City.objects.all()
+
+    features = []
+    for city in cities:
+        feature = {
+            'type': 'Feature',
+            'properties': {
+                'name': city.name,
+                'country': city.country,
+                'population': city.population,
+            },
+            'geometry': {
+                'type': 'Point',
+                'coordinates': [float(city.longitude), float(city.latitude)]
+            }
+        }
+        features.append(feature)
+
+    return Response({
+        'type': 'FeatureCollection',
+        'features': features
+    })

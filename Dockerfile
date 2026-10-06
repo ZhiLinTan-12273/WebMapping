@@ -5,7 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install system dependencies for GIS (GDAL, GEOS, PROJ, GDAL Python bindings)
+# Install system dependencies for GIS
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
         binutils \
@@ -17,15 +17,13 @@ RUN apt-get update \
         python3-gdal \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
 COPY . .
 
-# Expose Django port
-EXPOSE 8000
+# Collect static files at build time (optional, for production)
+# RUN python manage.py collectstatic --noinput
 
-# Default command
+EXPOSE 8000
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

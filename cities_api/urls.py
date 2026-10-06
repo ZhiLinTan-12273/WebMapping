@@ -19,4 +19,6 @@ urlpatterns = [
     path('stats/', views.city_statistics, name='city-statistics'),
     path('countries/', views.countries_list, name='countries-list'),
     path('info/', views.api_info, name='api-info'),
+
+    path('cities/geojson/', views.cities_geojson, name='cities_geojson'),
 ]
