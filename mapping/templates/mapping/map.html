@@ -1,0 +1,56 @@
+{% extends 'spatial_analysis/base.html' %}
+
+{% block title %}Dublin Map{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+    #map {
+        width: 100%;
+        height: calc(100vh - 56px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="map"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+    const map = L.map('map').setView([53.3498, -6.2603], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
+
+    const markers = [
+        {
+            lat: 53.3432,
+            lon: -6.2575,
+            name: 'Trinity College Dublin',
+            popup: 'Trinity College Dublin - Founded 1592'
+        },
+        {
+            lat: 53.3414,
+            lon: -6.2725,
+            name: 'Dublin Castle',
+            popup: 'Dublin Castle - Historic seat of power'
+        },
+        {
+            lat: 53.3416,
+            lon: -6.2831,
+            name: 'Guinness Storehouse',
+            popup: 'Guinness Storehouse - Home of the Black Stuff'
+        }
+    ];
+
+    markers.forEach(function(marker) {
+        L.marker([marker.lat, marker.lon])
+            .addTo(map)
+            .bindPopup('<b>' + marker.name + '</b><br>' + marker.popup);
+    });
+</script>
+{% endblock %}
