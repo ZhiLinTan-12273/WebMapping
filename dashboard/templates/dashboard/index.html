@@ -1,0 +1,131 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}European Urban Planning Dashboard{% endblock %}
+
+{% block head_extra %}
+<style>
+    #map { height: calc(100vh - 120px); width: 100%; border-radius: 8px; }
+    .filter-panel { height: calc(100vh - 120px); overflow-y: auto; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="row">
+        <!-- 控制面板 -->
+        <div class="col-md-3 filter-panel">
+            <div class="card mb-3">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Layer Controls</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="toggleCities" checked>
+                        <label class="form-check-label" for="toggleCities">Cities Layer</label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="toggleRegions" checked>
+                        <label class="form-check-label" for="toggleRegions">Regions Layer</label>
+                    </div>
+
+                    <h6>Filter Cities</h6>
+                    <div class="mb-2">
+                        <label class="form-label">Min Population</label>
+                        <input type="number" class="form-control form-control-sm" id="cityPopMin" placeholder="e.g. 500000">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Country</label>
+                        <select class="form-select form-select-sm" id="cityCountry">
+                            <option value="">All Countries</option>
+                            {% for c in countries %}
+                            <option value="{{ c }}">{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button class="btn btn-primary btn-sm w-100" id="applyFilters">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 地圖容器 -->
+        <div class="col-md-9">
+            <div id="map"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const map = L.map('map').setView([50.8503, 4.3517], 4);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    let citiesLayer = L.geoJSON(null, {
+        pointToLayer: (feature, latlng) => {
+            return L.circleMarker(latlng, {
+                radius: 6,
+                fillColor: '#ff7800',
+                color: '#000',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            });
+        },
+        onEachFeature: (feature, layer) => {
+            if (feature.properties) {
+                layer.bindPopup(`<strong>${feature.properties.name}</strong><br>Population: ${feature.properties.population?.toLocaleString()}`);
+            }
+        }
+    }).addTo(map);
+
+    let regionsLayer = L.geoJSON(null, {
+        style: {
+            color: '#3388ff',
+            weight: 2,
+            opacity: 0.65,
+            fillOpacity: 0.2
+        },
+        onEachFeature: (feature, layer) => {
+            if (feature.properties) {
+                layer.bindPopup(`<strong>${feature.properties.name}</strong> (${feature.properties.region_type})<br>Pop: ${feature.properties.total_population?.toLocaleString()}`);
+            }
+        }
+    }).addTo(map);
+
+    function loadData() {
+        const country = document.getElementById('cityCountry').value;
+        const popMin = document.getElementById('cityPopMin').value;
+
+        let cityUrl = '/api/cities/?';
+        if (country) cityUrl += `country=${encodeURIComponent(country)}&`;
+        if (popMin) cityUrl += `population_min=${encodeURIComponent(popMin)}&`;
+
+        fetch(cityUrl)
+            .then(res => res.json())
+            .then(data => {
+                citiesLayer.clearLayers();
+                citiesLayer.addData(data);
+            });
+
+        fetch('/api/regions/')
+            .then(res => res.json())
+            .then(data => {
+                regionsLayer.clearLayers();
+                regionsLayer.addData(data);
+            });
+    }
+
+    document.getElementById('applyFilters').addEventListener('click', loadData);
+    document.getElementById('toggleCities').addEventListener('change', (e) => {
+        if (e.target.checked) map.addLayer(citiesLayer); else map.removeLayer(citiesLayer);
+    });
+    document.getElementById('toggleRegions').addEventListener('change', (e) => {
+        if (e.target.checked) map.addLayer(regionsLayer); else map.removeLayer(regionsLayer);
+    });
+
+    loadData();
+</script>
+{% endblock %}
