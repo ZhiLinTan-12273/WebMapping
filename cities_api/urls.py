@@ -21,4 +21,8 @@ urlpatterns = [
     path('info/', views.api_info, name='api-info'),
 
     path('cities/geojson/', views.cities_geojson, name='cities_geojson'),
+
+    # Week 5 Proximity endpoints
+    path('cities/nearest/', views.find_nearest_cities, name='find_nearest_cities'),
+    path('cities/radius/', views.cities_within_radius, name='cities_within_radius'),
 ]
